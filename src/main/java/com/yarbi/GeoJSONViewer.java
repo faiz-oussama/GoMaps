@@ -4,7 +4,6 @@ import java.net.URL;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -20,42 +19,37 @@ public class GeoJSONViewer extends Application {
         // Initialize WebView and load external HTML file
         WebView webView = new WebView();
         webEngine = webView.getEngine();
-        webEngine.setOnError(event -> {
-            System.out.println("WebEngine Error: " + event.getMessage());
-        });
-        webEngine.setOnAlert(event -> {
-            System.out.println("WebEngine Alert: " + event.getData());
-        });
+        webEngine.setOnError(event -> System.out.println("WebEngine Error: " + event.getMessage()));
+        webEngine.setOnAlert(event -> System.out.println("WebEngine Alert: " + event.getData()));
 
-        // Load the HTML file with map and GeoJSON data
+        // Load the HTML file with the map
         URL mapUrl = getClass().getResource("/javascript/index.html");
         if (mapUrl != null) {
             webEngine.load(mapUrl.toExternalForm());
         } else {
-            System.err.println("map.html not found in resources.");
+            System.err.println("index.html not found in resources.");
             return;
         }
-
-        // Stylish Search Bar
-        TextField searchField = new TextField();
-        searchField.setPromptText("Enter place name...");
-        searchField.setOnAction(event -> searchLocation(searchField.getText()));
-
-        // Add the search bar at the top
-        root.setTop(searchField);
         root.setCenter(webView);
 
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 1100, 600);
         primaryStage.setScene(scene);
-        primaryStage.setTitle("GeoJSON Viewer for Morocco");
+        primaryStage.setTitle("GeoJSON Viewer with Sidebar");
         primaryStage.show();
     }
 
+    // Method to execute the JavaScript search function from JavaFX
     private void searchLocation(String query) {
-        // Execute JavaScript search function in the WebView
+        if (query == null || query.trim().isEmpty()) {
+            System.out.println("Search query is empty.");
+            return;
+        }
+
+        // Send the query to the JavaScript function in WebView
         String script = String.format("searchLocation('%s');", query);
         webEngine.executeScript(script);
     }
+
 
     public static void main(String[] args) {
         launch(args);

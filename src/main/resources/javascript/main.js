@@ -1,18 +1,37 @@
-const map = L.map('map', {zoomControl: false}).setView([33.589886, -7.603869], 13);
+const map = L.map('map', { zoomControl: false }).setView([33.589886, -7.603869], 13);
 let osm = null;
-
 let neabySearchMarker = null;
-map.on('click', function (e) {
-    var latitude = e.latlng.lat;
-    var longitude = e.latlng.lng;
+
+// Map Layers
+let osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let googleSatelliteLayer = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+});
+
+// Add event listener for map resize
+window.addEventListener('resize', function() {
+    map.invalidateSize(); // Ensure the map adjusts to the container size
+});
+
+// Zooming controls
+let zoomIn = () => map.zoomIn();
+let zoomOut = () => map.zoomOut();
+
+// Handle map clicks
+map.on('click', function(e) {
+    const latitude = e.latlng.lat;
+    const longitude = e.latlng.lng;
 
     SidebarController.handleCoordsChange(latitude, longitude);
 
-    if(neabySearchMarker) neabySearchMarker.remove();
+    // Remove previous marker
+    if (neabySearchMarker) neabySearchMarker.remove();
+
     let icon = L.icon({
         iconUrl: '../images/x-marker.png',
         iconSize: [26, 26],
     });
+
     neabySearchMarker = L.marker([latitude, longitude], {
         riseOnHover: true,
         bounceOnAdd: false,
@@ -21,20 +40,12 @@ map.on('click', function (e) {
     neabySearchMarker.bindPopup("Nearby search coords");
 });
 
-let zoomIn = () => map.zoomIn();
-let zoomOut = () => map.zoomOut();
-
-// Map Layer type
-osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-googleSatelliteLayer = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
-    subdomains:['mt0','mt1','mt2','mt3']
-});
-
+// Layer switching functions
 function switchToGoogleSatelliteLayer() {
     map.removeLayer(osmLayer);
     map.addLayer(googleSatelliteLayer);
 }
+
 function switchToOSMLayer() {
     map.removeLayer(googleSatelliteLayer);
     map.addLayer(osmLayer);
@@ -42,9 +53,11 @@ function switchToOSMLayer() {
 
 // Pan the map to the given location
 let searchMarker = null;
+
 function goToLocation(location) {
     map.flyTo([location.location.latitude, location.location.longitude], 13);
-    if(searchMarker) {
+
+    if (searchMarker) {
         searchMarker.remove();
     }
 
@@ -59,68 +72,57 @@ function goToLocation(location) {
 
 // Remove marker from map
 function removeLocationMarker() {
-    map.removeLayer(searchMarker);
+    if (searchMarker) {
+        map.removeLayer(searchMarker);
+        searchMarker = null;
+    }
 }
 
-// Get user device location
+// Get device location
 function getDeviceLocation() {
-    let location;
-    if(navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            function (position) {
-                location = {
-                    latitude: position.coords.latitude,
-                    lon: position.coords.longitude
-                }
-                // goToDeviceLocation(location)
-                console.log(location)
-            },
-            function (error) {
-                console.log(error.message)
-            }
-        );
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            map.flyTo([lat, lon], 13);
+            addSearchMarker(lat, lon, "Your Location");
+        }, function(error) {
+            alert("Error getting your location: " + error.message);
+        });
     } else {
-        console.error("Geolocation is not supported by this browser");
+        alert("Geolocation is not supported by this browser.");
     }
 }
 
-let currentLocationMarker = null;
-function goToDeviceLocation(location, zoom = 13) {
-    map.flyTo([location.location.latitude, location.location.longitude], zoom);
-    if(currentLocationMarker) {
-        currentLocationMarker.remove();
+// Add search marker
+function addSearchMarker(lat, lon, displayName) {
+    if (searchMarker) {
+        searchMarker.remove();
     }
 
-    let icon = L.icon({
-        iconUrl: '../images/gps_blue_dot.png',
-        iconSize: [34, 34],
-    });
-
-    currentLocationMarker = L.marker([location.location.latitude, location.location.longitude], {
-        riseOnHover: true,
-        bounceOnAdd: false,
-        icon: icon,
-    }).addTo(map);
+    searchMarker = L.marker([lat, lon]).addTo(map);
+    searchMarker.bindPopup(displayName).openPopup();
 }
 
-// Place nearby places markers on the map with a circle representing the area of those places
+// Place nearby places markers
 let circle = null;
 let markers = [];
 let locationCircles = [];
+
 function placeMarkers(locations, center, radius, markerRadius) {
-    if(circle) circle.remove();
-    if(markers) markers.map(marker => marker.remove());
-    if(locationCircles) locationCircles.map(circle => circle.remove());
+    if (circle) circle.remove();
+    if (markers) markers.forEach(marker => marker.remove());
+    if (locationCircles) locationCircles.forEach(circle => circle.remove());
 
     circle = L.circle([center.location.latitude, center.location.longitude], {
         radius: radius,
         fillColor: '#65B741',
         fillOpacity: 0.12,
-        color:'#163020',
+        color: '#163020',
         weight: 1,
     }).addTo(map);
 
-    var greenIcon = new L.Icon({
+    const greenIcon = new L.Icon({
         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
         iconSize: [25, 41],
@@ -152,13 +154,16 @@ function placeMarkers(locations, center, radius, markerRadius) {
 
     map.fitBounds(circle.getBounds());
 }
-function removePLacesMarkers() {
-    if(markers) markers.map(marker => marker.remove());
-    if(circle) circle.remove();
-}
-function searchLocation(query) {
 
-    var geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&addressdetails=1`;
+// Remove places markers
+function removePLacesMarkers() {
+    if (markers) markers.forEach(marker => marker.remove());
+    if (circle) circle.remove();
+}
+
+// Search location using OpenStreetMap Nominatim API
+function searchLocation(query) {
+    const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&addressdetails=1`;
 
     fetch(geocodeUrl)
         .then(response => response.json())
@@ -173,13 +178,4 @@ function searchLocation(query) {
             }
         })
         .catch(err => alert("Error fetching location: " + err));
-}
-
-function addSearchMarker(lat, lon, displayName) {
-    if (searchMarker) {
-        searchMarker.remove(); 
-    }
-
-    searchMarker = L.marker([lat, lon]).addTo(map);
-    searchMarker.bindPopup(displayName).openPopup();
 }
