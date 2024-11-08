@@ -49,7 +49,7 @@ public class GeoJSONViewer extends Application {
         String script = String.format("searchLocation('%s');", query);
         webEngine.executeScript(script);
     }
-
+    
 
     public static void main(String[] args) {
         launch(args);
