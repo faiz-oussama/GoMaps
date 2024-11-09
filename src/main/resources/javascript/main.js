@@ -1,96 +1,20 @@
 const map = L.map('map', { zoomControl: false }).setView([33.589886, -7.603869], 13);
 let osm = null;
-let neabySearchMarker = null;
+let nearbySearchMarker = null;
 
-// Map Layers
 let osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let googleSatelliteLayer = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
-});
-
-// Add event listener for map resize
-window.addEventListener('resize', function() {
-    map.invalidateSize(); // Ensure the map adjusts to the container size
-});
 
 // Zooming controls
 let zoomIn = () => map.zoomIn();
 let zoomOut = () => map.zoomOut();
 
-// Handle map clicks
-map.on('click', function(e) {
-    const latitude = e.latlng.lat;
-    const longitude = e.latlng.lng;
-
-    SidebarController.handleCoordsChange(latitude, longitude);
-
-    // Remove previous marker
-    if (neabySearchMarker) neabySearchMarker.remove();
-
-    let icon = L.icon({
-        iconUrl: '../images/x-marker.png',
-        iconSize: [26, 26],
-    });
-
-    neabySearchMarker = L.marker([latitude, longitude], {
-        riseOnHover: true,
-        bounceOnAdd: false,
-        icon: icon,
-    }).addTo(map);
-    neabySearchMarker.bindPopup("Nearby search coords");
-});
-
-// Layer switching functions
-function switchToGoogleSatelliteLayer() {
-    map.removeLayer(osmLayer);
-    map.addLayer(googleSatelliteLayer);
-}
-
-function switchToOSMLayer() {
-    map.removeLayer(googleSatelliteLayer);
-    map.addLayer(osmLayer);
-}
-
-// Pan the map to the given location
 let searchMarker = null;
-
-function goToLocation(location) {
-    map.flyTo([location.location.latitude, location.location.longitude], 13);
-
-    if (searchMarker) {
-        searchMarker.remove();
-    }
-
-    searchMarker = L.marker([location.location.latitude, location.location.longitude], {
-        riseOnHover: true,
-        bounceOnAdd: false,
-        title: location.displayName.text,
-    }).on('click', function () {
-        LeafletMapController.handleMarkerClick(JSON.stringify(location));
-    }).addTo(map);
-}
 
 // Remove marker from map
 function removeLocationMarker() {
     if (searchMarker) {
         map.removeLayer(searchMarker);
         searchMarker = null;
-    }
-}
-
-// Get device location
-function getDeviceLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            map.flyTo([lat, lon], 13);
-            addSearchMarker(lat, lon, "Your Location");
-        }, function(error) {
-            alert("Error getting your location: " + error.message);
-        });
-    } else {
-        alert("Geolocation is not supported by this browser.");
     }
 }
 
@@ -104,10 +28,41 @@ function addSearchMarker(lat, lon, displayName) {
     searchMarker.bindPopup(displayName).openPopup();
 }
 
-// Place nearby places markers
 let circle = null;
-let markers = [];
-let locationCircles = [];
+function addFixedLocationCircle(lat, lon) {
+    circle = L.circle([lat, lon], {
+        radius: 14,  // Smaller radius to resemble a "dot"
+        color: '#fff',
+        opacity: 1,  // Blue color
+        fillColor: '#007bff', // Fill color (blue)
+        fillOpacity: 0.7, // Fully opaque to mimic a solid dot
+        weight: 4 // Thicker border to resemble a "location dot"
+    }).addTo(map);
+    circle.setStyle({
+        boxShadow: '0 0 10px rgba(0, 123, 255, 0.5)'  // Soft blue shadow
+    });
+}
+
+function setMyLocation() {
+    // Using Nominatim API to fetch location based on an address or predefined coordinates.
+    const geocodeUrl = "https://nominatim.openstreetmap.org/reverse?format=json&lat=35.172506&lon=-3.862348&addressdetails=1";  // Example coordinates
+
+    fetch(geocodeUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.lat && data.lon) {
+                const lat = parseFloat(data.lat);
+                const lon = parseFloat(data.lon);
+
+                addFixedLocationCircle(lat, lon);
+                map.flyTo([lat, lon], 16.5);
+                addSearchMarker(lat, lon, data.display_name);
+            } else {
+                alert("Location not found!");
+            }
+        })
+        .catch(err => alert("Error fetching location: " + err));
+}
 
 function placeMarkers(locations, center, radius, markerRadius) {
     if (circle) circle.remove();
@@ -156,12 +111,12 @@ function placeMarkers(locations, center, radius, markerRadius) {
 }
 
 // Remove places markers
-function removePLacesMarkers() {
+function removePlacesMarkers() {
     if (markers) markers.forEach(marker => marker.remove());
     if (circle) circle.remove();
 }
 
-// Search location using OpenStreetMap Nominatim API
+// Search for a location
 function searchLocation(query) {
     const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&addressdetails=1`;
 
@@ -171,7 +126,7 @@ function searchLocation(query) {
             if (data.length > 0) {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
-                map.flyTo([lat, lon], 13);
+                map.flyTo([lat, lon], 20);
                 addSearchMarker(lat, lon, data[0].display_name);
             } else {
                 alert("Location not found!");
