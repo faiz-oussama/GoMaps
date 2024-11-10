@@ -2,15 +2,18 @@ const map = L.map('map', { zoomControl: false }).setView([33.589886, -7.603869],
 let osm = null;
 let nearbySearchMarker = null;
 
-let osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let osmLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=pveDabKqKvojR5EZXAR7').addTo(map);
 
-// Zooming controls
+
 let zoomIn = () => map.zoomIn();
 let zoomOut = () => map.zoomOut();
 
 let searchMarker = null;
+let circle = null;
+let locationCircles = [];
+let markers = [];
 
-// Remove marker from map
+
 function removeLocationMarker() {
     if (searchMarker) {
         map.removeLayer(searchMarker);
@@ -18,7 +21,6 @@ function removeLocationMarker() {
     }
 }
 
-// Add search marker
 function addSearchMarker(lat, lon, displayName) {
     if (searchMarker) {
         searchMarker.remove();
@@ -28,23 +30,99 @@ function addSearchMarker(lat, lon, displayName) {
     searchMarker.bindPopup(displayName).openPopup();
 }
 
-let circle = null;
+function clearMarkers() {
+    if (circle) circle.remove();
+    if (markers) markers.forEach(marker => marker.remove());
+    if (locationCircles) locationCircles.forEach(circle => circle.remove());
+}
+
+
+function placeMarkers(locations, center, radius = 500, markerRadius = 50) {
+    clearMarkers();
+    circle = L.circle([center.latitude, center.longitude], {
+        radius: radius,
+        fillColor: '#65B741',
+        fillOpacity: 0.12,
+        color: '#ffffff',
+        weight: 2,
+    }).addTo(map);
+
+    const greenIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    markers = locations.map(location => {
+        const marker = L.marker([location.latitude, location.longitude], {
+            icon: greenIcon,
+            title: location.displayName,
+            riseOnHover: true
+        })
+        .bindPopup(`<b>${location.displayName}</b><br>${location.address || ''}`)
+        .addTo(map);
+        return marker;
+    });
+
+    locationCircles = locations.map(location => {
+        return L.circle([location.latitude, location.longitude], {
+            radius: markerRadius,
+            fillColor: '#0952ff',
+            fillOpacity: 0.25,
+            color: '#ffffff',
+            weight: 2,
+        }).addTo(map);
+    });
+
+    map.fitBounds(circle.getBounds());
+}
+
+
+function fetchAndPlaceMarkers() {
+    const placeType = document.getElementById("typesComboBox").value;
+    const lat = 35.170055; 
+    const lon = -3.863304;
+    const radius = 1000;
+
+    const apiKey = 'AlzaSyTrEtMWhlJ2J70NOcEa9oBgOodLFfJj-dW';
+    const url = `https://maps.gomaps.pro/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=${radius}&name=${placeType}&key=${apiKey}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.results) {
+                const locations = data.results.map(item => ({
+                    latitude: item.geometry.location.lat,
+                    longitude: item.geometry.location.lng,
+                    displayName: item.name,
+                    address: item.vicinity
+                }));
+                placeMarkers(locations, { latitude: lat, longitude: lon });
+            } else {
+                console.error('No results found');
+            }
+        })
+        .catch(err => console.error("Error fetching place data:", err));
+}
+
 function addFixedLocationCircle(lat, lon) {
     circle = L.circle([lat, lon], {
-        radius: 14,  // Smaller radius to resemble a "dot"
+        radius: 14,  
         color: '#fff',
-        opacity: 1,  // Blue color
-        fillColor: '#007bff', // Fill color (blue)
-        fillOpacity: 0.7, // Fully opaque to mimic a solid dot
-        weight: 4 // Thicker border to resemble a "location dot"
+        opacity: 1,  
+        fillColor: '#007bff',
+        fillOpacity: 0.7, 
+        weight: 4,
     }).addTo(map);
     circle.setStyle({
-        boxShadow: '0 0 10px rgba(0, 123, 255, 0.5)'  // Soft blue shadow
+        boxShadow: '0 0 10px rgba(0, 123, 255, 0.5)'
     });
 }
 
 function setMyLocation() {
-    // Using Nominatim API to fetch location based on an address or predefined coordinates.
     const geocodeUrl = "https://nominatim.openstreetmap.org/reverse?format=json&lat=35.172506&lon=-3.862348&addressdetails=1";  // Example coordinates
 
     fetch(geocodeUrl)
@@ -64,59 +142,12 @@ function setMyLocation() {
         .catch(err => alert("Error fetching location: " + err));
 }
 
-function placeMarkers(locations, center, radius, markerRadius) {
-    if (circle) circle.remove();
-    if (markers) markers.forEach(marker => marker.remove());
-    if (locationCircles) locationCircles.forEach(circle => circle.remove());
 
-    circle = L.circle([center.location.latitude, center.location.longitude], {
-        radius: radius,
-        fillColor: '#65B741',
-        fillOpacity: 0.12,
-        color: '#163020',
-        weight: 1,
-    }).addTo(map);
-
-    const greenIcon = new L.Icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
-    });
-
-    markers = locations.map(location => {
-        return L.marker([location.location.latitude, location.location.longitude], {
-            riseOnHover: true,
-            bounceOnAdd: true,
-            icon: greenIcon,
-            title: location.displayName.text,
-        }).on('click', function () {
-            LeafletMapController.handleMarkerClick(JSON.stringify(location));
-        }).addTo(map);
-    });
-
-    locationCircles = locations.map(location => {
-        return L.circle([location.location.latitude, location.location.longitude], {
-            radius: markerRadius,
-            fillColor: '#0952ff',
-            fillOpacity: 0.12,
-            color: '#163020',
-            weight: 1,
-        }).addTo(map);
-    });
-
-    map.fitBounds(circle.getBounds());
-}
-
-// Remove places markers
 function removePlacesMarkers() {
     if (markers) markers.forEach(marker => marker.remove());
     if (circle) circle.remove();
 }
 
-// Search for a location
 function searchLocation(query) {
     const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&addressdetails=1`;
 
@@ -133,4 +164,73 @@ function searchLocation(query) {
             }
         })
         .catch(err => alert("Error fetching location: " + err));
+}
+
+
+function clearMarkers() {
+    if (circle) circle.remove();
+    if (markers) markers.forEach(marker => marker.remove());
+    if (locationCircles) locationCircles.forEach(circle => circle.remove());
+}
+
+function placeMarkers(locations, center, radius = 500, markerRadius = 50) {
+    clearMarkers();
+
+    circle = L.circle([center.latitude, center.longitude], {
+        radius: radius,
+        fillColor: '#65B741',
+        fillOpacity: 0.12,
+        color: '#ffffff',
+        weight: 2,
+    }).addTo(map);
+
+    const greenIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    markers = locations.map(location => {
+        const marker = L.marker([location.latitude, location.longitude], {
+            icon: greenIcon,
+            title: location.displayName,
+            riseOnHover: true
+        })
+        .bindPopup(`<b>${location.displayName}</b><br>${location.address || ''}`)
+        .addTo(map);
+        return marker;
+    });
+
+    locationCircles = locations.map(location => {
+        return L.circle([location.latitude, location.longitude], {
+            radius: markerRadius,
+            fillColor: '#0952ff',
+            fillOpacity: 0.25,
+            color: '#ffffff',
+            weight: 2,
+        }).addTo(map);
+    });
+
+    map.fitBounds(circle.getBounds());
+}
+
+function searchLocation(query) {
+    const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${query}`;
+
+    fetch(geocodeUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+                map.setView([lat, lon], 15);
+                L.marker([lat, lon]).addTo(map).bindPopup(data[0].display_name).openPopup();
+            } else {
+                alert("Location not found!");
+            }
+        })
+        .catch(err => console.error("Error fetching location:", err));
 }

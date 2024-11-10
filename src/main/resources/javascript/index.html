@@ -13,23 +13,21 @@
             overflow: hidden;
         }
 
-        /* Sidebar Styles */
         .sidebar {
             width: 317px;
             background-color: #fff;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             padding: 20px;
-            position: absolute; /* Overlay on top of the map */
+            position: absolute;
             top: 0;
             left: 0;
-            z-index: 1000; /* Ensure it appears above the map */
+            z-index: 1000;
             height: 100%;
             border-right: 2px solid #ccc;
         }
 
         .sidebar h2 {
             font-size: 22px;
-            font-weight: bold;
             color: #333;
             margin-bottom: 20px;
         }
@@ -82,7 +80,6 @@
     <!-- Sidebar Section -->
     <div class="sidebar">
         <h2>Mapxplorer</h2>
-
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="Enter a place name..." />
             <button onclick="searchLocation(document.getElementById('searchInput').value)">Search</button>
@@ -91,18 +88,11 @@
         <label for="typesComboBox">Select Place Type</label>
         <select id="typesComboBox">
             <option value="restaurant">Restaurant</option>
-            <option value="park">Park</option>
-            <option value="school">School</option>
+            <option value="cafe">Café</option>
+            <option value="pharmacy">Pharmacy</option>
         </select>
-
-        <label for="radiusSlider">Distance Circle Radius - 2 km</label>
-        <input type="range" id="radiusSlider" min="1" max="20" step="1" value="2">
-
-        <label for="markerRadiusSlider">Place Circle Radius - 0 m</label>
-        <input type="range" id="markerRadiusSlider" min="0" max="1000" step="50">
-
-        <button onclick="searchNearbyPlaces()">Search</button>
-        <button onclick="setMyLocation()">My Location</button>
+        <button onclick="setMyLocation()">Find me</button>
+        <button onclick="fetchAndPlaceMarkers()">Find Nearby Places</button>
     </div>
 
     <!-- Map Section -->
@@ -112,6 +102,5 @@
 
     <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js" crossorigin=""></script>
     <script src="./main.js"></script>
-
 </body>
 </html>
