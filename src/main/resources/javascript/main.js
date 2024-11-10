@@ -37,7 +37,7 @@ function clearMarkers() {
 }
 
 
-function placeMarkers(locations, center, radius = 500, markerRadius = 50) {
+function placeMarkers(locations, center, radius = 1000, markerRadius = 50) {
     clearMarkers();
     circle = L.circle([center.latitude, center.longitude], {
         radius: radius,
@@ -96,7 +96,7 @@ function addFixedLocationCircle(lat, lon) {
 }
 
 function setMyLocation() {
-    const geocodeUrl = "https://nominatim.openstreetmap.org/reverse?format=json&lat=35.172506&lon=-3.862348&addressdetails=1";  // Example coordinates
+    const geocodeUrl = "https://nominatim.openstreetmap.org/reverse?format=json&lat=35.172506&lon=-3.862348&addressdetails=1";
 
     fetch(geocodeUrl)
         .then(response => response.json())
@@ -146,9 +146,10 @@ function clearMarkers() {
     if (locationCircles) locationCircles.forEach(circle => circle.remove());
 }
 
-function placeMarkers(locations, center, radius = 500, markerRadius = 50) {
+function placeMarkers(locations, center, radius = 1000, markerRadius = 50) {
     clearMarkers();
 
+    // Update the big circle with the selected radius from the slider
     circle = L.circle([center.latitude, center.longitude], {
         radius: radius,
         fillColor: '#65B741',
@@ -187,8 +188,17 @@ function placeMarkers(locations, center, radius = 500, markerRadius = 50) {
         }).addTo(map);
     });
 
-    map.fitBounds(circle.getBounds());
+    map.fitBounds(circle.getBounds()); // Adjust map view based on the circle
 }
+const radiusSlider = document.getElementById('radius');
+const radiusValue = document.getElementById('radiusValue');
+
+radiusSlider.addEventListener('input', function() {
+    const radius = parseInt(radiusSlider.value);
+    radiusValue.textContent = `${radius} meters`;
+
+    placeMarkers(locations, { latitude: 35.172506, longitude: -3.862348 }, radius);
+});
 
 function searchLocation(query) {
     const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${query}`;
@@ -229,14 +239,9 @@ options.forEach(option => {
     });
 });
 function fetchAndPlaceMarkers() {
-    if (!selectedPlaceType) {
-        console.error("No place type selected.");
-        return;
-    }
-
-    const lat = 35.170055;
-    const lon = -3.863304;
-    const radius = 1000;
+    const lat = 35.172506;
+    const lon = -3.862348;
+    const radius = parseInt(radiusSlider.value); // Get the radius value from the slider
 
     const apiKey = 'AlzaSyTrEtMWhlJ2J70NOcEa9oBgOodLFfJj-dW';
     const url = `https://maps.gomaps.pro/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=${radius}&name=${selectedPlaceType}&key=${apiKey}`;
@@ -251,7 +256,7 @@ function fetchAndPlaceMarkers() {
                     displayName: item.name,
                     address: item.vicinity
                 }));
-                placeMarkers(locations, { latitude: lat, longitude: lon });
+                placeMarkers(locations, { latitude: lat, longitude: lon }, radius); // Pass updated radius
             } else {
                 console.error('No results found');
             }
@@ -261,10 +266,3 @@ function fetchAndPlaceMarkers() {
 
 // Attach fetch function to the button to trigger on click
 document.getElementById("findNearbyPlacesBtn").addEventListener("click", fetchAndPlaceMarkers);
-const radiusSlider = document.getElementById('radius');
-const radiusValue = document.getElementById('radiusValue');
-
-// Update the radius value display when the slider is moved
-radiusSlider.addEventListener('input', function() {
-    radiusValue.textContent = radiusSlider.value + "m";
-});
