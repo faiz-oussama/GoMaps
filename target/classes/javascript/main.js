@@ -81,33 +81,6 @@ function placeMarkers(locations, center, radius = 500, markerRadius = 50) {
 }
 
 
-function fetchAndPlaceMarkers() {
-    const placeType = document.getElementById("typesComboBox").value;
-    const lat = 35.170055; 
-    const lon = -3.863304;
-    const radius = 1000;
-
-    const apiKey = 'AlzaSyTrEtMWhlJ2J70NOcEa9oBgOodLFfJj-dW';
-    const url = `https://maps.gomaps.pro/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=${radius}&name=${placeType}&key=${apiKey}`;
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data.results) {
-                const locations = data.results.map(item => ({
-                    latitude: item.geometry.location.lat,
-                    longitude: item.geometry.location.lng,
-                    displayName: item.name,
-                    address: item.vicinity
-                }));
-                placeMarkers(locations, { latitude: lat, longitude: lon });
-            } else {
-                console.error('No results found');
-            }
-        })
-        .catch(err => console.error("Error fetching place data:", err));
-}
-
 function addFixedLocationCircle(lat, lon) {
     circle = L.circle([lat, lon], {
         radius: 14,  
@@ -226,7 +199,7 @@ function searchLocation(query) {
             if (data.length > 0) {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
-                map.setView([lat, lon], 15);
+                map.flyTo([lat, lon], 15);
                 L.marker([lat, lon]).addTo(map).bindPopup(data[0].display_name).openPopup();
             } else {
                 alert("Location not found!");
@@ -234,3 +207,64 @@ function searchLocation(query) {
         })
         .catch(err => console.error("Error fetching location:", err));
 }
+
+const optionMenu = document.querySelector(".select-menu"),
+      selectBtn = optionMenu.querySelector(".select-btn"),
+      options = optionMenu.querySelectorAll(".option"),
+      sBtn_text = optionMenu.querySelector(".sBtn-text");
+
+// Store the selected place type when an option is clicked
+let selectedPlaceType = "";
+
+// Toggle the dropdown menu when the button is clicked
+selectBtn.addEventListener("click", () => optionMenu.classList.toggle("active"));
+
+// Update the selected place type when an option is clicked and close the dropdown
+options.forEach(option => {
+    option.addEventListener("click", () => {
+        // Set the selected place type based on the clicked option
+        selectedPlaceType = option.querySelector(".option-text").innerText;
+        sBtn_text.innerText = selectedPlaceType;
+        optionMenu.classList.remove("active"); // Close the dropdown after selection
+    });
+});
+function fetchAndPlaceMarkers() {
+    if (!selectedPlaceType) {
+        console.error("No place type selected.");
+        return;
+    }
+
+    const lat = 35.170055;
+    const lon = -3.863304;
+    const radius = 1000;
+
+    const apiKey = 'AlzaSyTrEtMWhlJ2J70NOcEa9oBgOodLFfJj-dW';
+    const url = `https://maps.gomaps.pro/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=${radius}&name=${selectedPlaceType}&key=${apiKey}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.results) {
+                const locations = data.results.map(item => ({
+                    latitude: item.geometry.location.lat,
+                    longitude: item.geometry.location.lng,
+                    displayName: item.name,
+                    address: item.vicinity
+                }));
+                placeMarkers(locations, { latitude: lat, longitude: lon });
+            } else {
+                console.error('No results found');
+            }
+        })
+        .catch(err => console.error("Error fetching place data:", err));
+}
+
+// Attach fetch function to the button to trigger on click
+document.getElementById("findNearbyPlacesBtn").addEventListener("click", fetchAndPlaceMarkers);
+const radiusSlider = document.getElementById('radius');
+const radiusValue = document.getElementById('radiusValue');
+
+// Update the radius value display when the slider is moved
+radiusSlider.addEventListener('input', function() {
+    radiusValue.textContent = radiusSlider.value + "m";
+});
