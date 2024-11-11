@@ -11,15 +11,15 @@
 <body>
 
     <!-- Sidebar Section -->
+    <div id="placeInfoPanel" class="slide-panel">
+        <img id="placeImage" alt="Place Image" />
+        <h3 id="placeName">Place Name</h3>
+        <p id="placeDistance"></p>
+        <button id="getDirectionsBtn">Get Directions</button>
+        <button id="closeInfoPanel">Close</button>
+    </div>
     <div class="sidebar">
         <img src="./logo.svg" alt="logo">
-        <div id="placeInfoPanel" style="display: none;">
-            <img id="placeImage" alt="Place Image" />
-            <h3 id="placeName">Place Name</h3>
-            <p id="placeDistance"></p>
-            <button id="getDirectionsBtn">Get Directions</button>
-            <button id="closeInfoPanel">Close</button>
-        </div>
         <div class="inner-form">
             <div class="input-field">
                 <button onclick="searchLocation(document.getElementById('search').value)" class="btn-search">

@@ -236,7 +236,7 @@ options.forEach(option => {
         // Set the selected place type based on the clicked option
         selectedPlaceType = option.querySelector(".option-text").innerText;
         sBtn_text.innerText = selectedPlaceType;
-        optionMenu.classList.remove("active"); // Close the dropdown after selection
+        optionMenu.classList.remove("active");
     });
 });
 
@@ -305,7 +305,6 @@ function showLocationInfo(placeId) {
     const placeName = document.getElementById("placeName");
     const placeDistance = document.getElementById("placeDistance");
 
-    // Your current location (for example)
     const myLat = 35.172506;
     const myLon = -3.862348;
 
@@ -328,6 +327,8 @@ function showLocationInfo(placeId) {
 
                 // Display the info panel
                 placeInfoPanel.style.display = "block";
+                placeInfoPanel.classList.add("active");
+
 
                 // Store the place info for later use (route drawing)
                 placeInfoPanel.setAttribute("data-lat", place.geometry.location.lat);
@@ -341,9 +342,8 @@ function showLocationInfo(placeId) {
 
 // Close the info panel
 document.getElementById("closeInfoPanel").addEventListener("click", () => {
-    document.getElementById("placeInfoPanel").style.display = "none";
+    document.getElementById("placeInfoPanel").classList.remove("active");
 });
-
 // Function to draw route on the Leaflet map
 function drawRouteOnMap() {
     const placeInfoPanel = document.getElementById("placeInfoPanel");
@@ -388,7 +388,7 @@ function drawRoute(route) {
     }
 
     // Create and add a new polyline to the map
-    routePolyline = L.polyline(coordinates, { color: 'blue', weight: 8, opacity: 0.7 }).addTo(map);
+    routePolyline = L.polyline(coordinates, { color: 'blue', weight: 8, opacity: 0.9 }).addTo(map);
 
     // Adjust the map view to fit the route
     map.fitBounds(routePolyline.getBounds());
