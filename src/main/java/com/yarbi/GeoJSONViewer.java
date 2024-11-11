@@ -15,14 +15,11 @@ public class GeoJSONViewer extends Application {
     @Override
     public void start(Stage primaryStage) {
         BorderPane root = new BorderPane();
-
-        // Initialize WebView and load external HTML file
         WebView webView = new WebView();
         webEngine = webView.getEngine();
         webEngine.setOnError(event -> System.out.println("WebEngine Error: " + event.getMessage()));
         webEngine.setOnAlert(event -> System.out.println("WebEngine Alert: " + event.getData()));
 
-        // Load the HTML file with the map
         URL mapUrl = getClass().getResource("/javascript/index.html");
         if (mapUrl != null) {
             webEngine.load(mapUrl.toExternalForm());
@@ -37,15 +34,11 @@ public class GeoJSONViewer extends Application {
         primaryStage.setTitle("GeoJSON Viewer with Sidebar");
         primaryStage.show();
     }
-
-    // Method to execute the JavaScript search function from JavaFX
     private void searchLocation(String query) {
         if (query == null || query.trim().isEmpty()) {
             System.out.println("Search query is empty.");
             return;
         }
-
-        // Send the query to the JavaScript function in WebView
         String script = String.format("searchLocation('%s');", query);
         webEngine.executeScript(script);
     }
