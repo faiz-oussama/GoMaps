@@ -13,6 +13,13 @@
     <!-- Sidebar Section -->
     <div class="sidebar">
         <img src="./logo.svg" alt="logo">
+        <div id="placeInfoPanel" style="display: none;">
+            <img id="placeImage" alt="Place Image" />
+            <h3 id="placeName">Place Name</h3>
+            <p id="placeDistance"></p>
+            <button id="getDirectionsBtn">Get Directions</button>
+            <button id="closeInfoPanel">Close</button>
+        </div>
         <div class="inner-form">
             <div class="input-field">
                 <button onclick="searchLocation(document.getElementById('search').value)" class="btn-search">
@@ -59,8 +66,22 @@
                 <span id="radiusValue">1000m</span>
             </div>
         </div>
-        <button class="sidebar-btn" id="findNearbyPlacesBtn">Find Nearby Places</button>
-
+        <button class="sidebar-btn" class="styled-table" id="findNearbyPlacesBtn">Find Nearby Places</button>
+        <div class="table-container">
+            <table id="searchResultsTable" class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Distance(m)</th>
+                        <th>Show Info</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Results will be populated here dynamically -->
+                </tbody>
+            </table>
+        </div>
+        
     </div>
 
     
@@ -83,6 +104,7 @@
 
 
     <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.js"></script>
     <script src="./main.js"></script>
 </body>
 </html>
