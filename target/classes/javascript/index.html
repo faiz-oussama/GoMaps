@@ -14,6 +14,7 @@
     <div id="placeInfoPanel" class="slide-panel">
         <img id="placeImage" alt="Place Image" />
         <h3 id="placeName">Place Name</h3>
+        <div id="placeDetails"></div>
         <p id="placeDistance"></p>
         <button id="getDirectionsBtn">Get Directions</button>
         <button id="closeInfoPanel">Close</button>
@@ -80,6 +81,7 @@
                     <!-- Results will be populated here dynamically -->
                 </tbody>
             </table>
+            <button class="search-btn" onclick="clearSearch()" type="button">Clear</button>
         </div>
         
     </div>

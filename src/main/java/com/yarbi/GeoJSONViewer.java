@@ -4,6 +4,7 @@ import java.net.URL;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -30,8 +31,9 @@ public class GeoJSONViewer extends Application {
         root.setCenter(webView);
 
         Scene scene = new Scene(root, 1100, 600);
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/javascript/l.png")));
         primaryStage.setScene(scene);
-        primaryStage.setTitle("GeoJSON Viewer with Sidebar");
+        primaryStage.setTitle("GoMaps App");
         primaryStage.show();
     }
     private void searchLocation(String query) {
