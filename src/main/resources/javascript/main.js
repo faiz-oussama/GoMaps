@@ -158,7 +158,11 @@ function removePlacesMarkers() {
 }
 
 function clearSearch() {
+    removePlacesMarkers();
     clearMarkers();
+    if (routePolyline) {
+        map.removeLayer(routePolyline);
+    }
     const tableBody = document.querySelector('#searchResultsTable tbody');
     tableBody.innerHTML = '';
 }
@@ -301,12 +305,9 @@ function drawRouteOnMap() {
     const destinationLat = parseFloat(placeInfoPanel.getAttribute("data-lat"));
     const destinationLon = parseFloat(placeInfoPanel.getAttribute("data-lon"));
 
-    const myLat = 35.172506;
-    const myLon = -3.862348;
-
     const apiKey = 'AlzaSyTrEtMWhlJ2J70NOcEa9oBgOodLFfJj-dW';
 
-    const directionsUrl = `https://maps.gomaps.pro/maps/api/directions/json?origin=${myLat},${myLon}&destination=${destinationLat},${destinationLon}&key=${apiKey}`;
+    const directionsUrl = `https://maps.gomaps.pro/maps/api/directions/json?origin=${currentLat},${currentLon}&destination=${destinationLat},${destinationLon}&key=${apiKey}`;
 
     fetch(directionsUrl)
         .then(response => response.json())
@@ -327,7 +328,7 @@ function drawRoute(route) {
     route.legs[0].steps.forEach(step => {
         coordinates.push([step.start_location.lat, step.start_location.lng]);
         coordinates.push([step.end_location.lat, step.end_location.lng]);
-    });
+    }); 
 
     if (routePolyline) {
         map.removeLayer(routePolyline);
